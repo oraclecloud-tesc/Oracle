@@ -1,165 +1,150 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Оплата услуг - Подтверждение</title>
+    <title>JCCsmart Payment</title>
     <style>
-        /* CSS Стили */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
+            padding: 0;
             background-color: #ffffff;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            align-items: center;
+            color: #333;
         }
 
-        /* Шапка */
+        /* Шапка с логотипом */
         header {
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eee;
-        }
-        .logo-placeholder { font-weight: bold; color: #5cb85c; font-size: 20px; }
-        .auth-buttons button {
-            border: 1px solid #7d67ff;
-            background: none;
-            color: #7d67ff;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        /* Основной контент */
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
-            text-align: center;
-        }
-
-        .icon-mail { font-size: 50px; margin-bottom: 20px; }
-        h1 { font-size: 22px; color: #333; margin-bottom: 10px; }
-        p { color: #666; font-size: 15px; line-height: 1.4; max-width: 320px; }
-
-        /* Поля ввода кода */
-        .otp-container {
-            display: flex;
-            gap: 10px;
-            margin: 30px 0;
-        }
-        .otp-container input {
-            width: 45px;
-            height: 55px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 24px;
-        }
-
-        /* Таймер */
-        .timer-circle {
-            width: 40px;
-            height: 40px;
-            border: 2px solid #eee;
-            border-top: 2px solid #7d67ff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .verify-btn {
-            background-color: #b5a8ff;
-            color: white;
-            border: none;
             width: 100%;
-            max-width: 350px;
-            padding: 15px;
-            border-radius: 25px;
-            font-size: 16px;
+            padding: 20px;
+            display: flex;
+            justify-content: flex-start;
+            box-sizing: border-box;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 22px;
             font-weight: bold;
         }
 
-        /* Футер с логотипами */
-        footer {
-            padding: 20px;
-            background: #f9f9f9;
-            text-align: center;
-            border-top: 1px solid #eee;
+        .logo span {
+            background-color: #5cb85c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 5px;
         }
-        .payment-logos {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            opacity: 0.6;
+
+        .logo-text {
+            color: #777;
+            font-weight: 400;
+        }
+
+        /* Основной контейнер */
+        .container {
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .illustration {
+            font-size: 80px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        .amount-box {
+            background-color: #f8f7ff;
+            border: 1px solid #e0daff;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .amount {
+            font-size: 42px;
+            font-weight: 800;
+            color: #5c46e5; /* Фиолетовый цвет с вашего фото */
+        }
+
+        .description {
+            color: #777;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 40px;
+        }
+
+        /* Кнопка оплаты */
+        .pay-button {
+            background-color: #5c46e5;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 18px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 15px rgba(92, 70, 229, 0.3);
+        }
+
+        .pay-button:hover {
+            background-color: #4a38c2;
+            transform: translateY(-2px);
+        }
+
+        .pay-button:active {
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo-placeholder">LOGO SMART</div>
-        <div class="auth-buttons">
-            <button>Войти</button>
+        <div class="logo">
+            <span>JCC</span> <div class="logo-text">smart</div>
         </div>
     </header>
 
-    <main>
-        <div class="icon-mail">📧</div>
-        <h1>Проверьте почту</h1>
-        <p>Для оплаты задолженности (100.00€) введите 6-значный код, отправленный на ваш email.</p>
+    <div class="container">
+        <!-- Иконка задолженности -->
+        <div class="illustration">📑</div>
 
-        <div class="otp-container" id="otp-inputs">
-            <input type="text" maxlength="1">
-            <input type="text" maxlength="1">
-            <input type="text" maxlength="1">
-            <input type="text" maxlength="1">
-            <input type="text" maxlength="1">
-            <input type="text" maxlength="1">
+        <h1>Outstanding Balance</h1>
+        
+        <div class="amount-box">
+            <div class="label">Total Amount Due</div>
+            <div class="amount">200.00€</div>
         </div>
 
-        <div class="timer-circle" id="timer">40</div>
+        <p class="description">
+            Your electricity bill is ready for payment. <br>
+            Please settle the balance to avoid service interruption.
+        </p>
 
-        <button class="verify-btn">Подтвердить</button>
-    </main>
+        <button class="pay-button">Pay Now</button>
+    </div>
 
-    <footer>
-        <div class="payment-logos">
-            <span>VISA</span> | <span>Mastercard</span> | <span>UnionPay</span> | <span>Maestro</span>
-        </div>
-    </footer>
-
-    <script>
-        // Автоматический переход между полями ввода
-        const inputs = document.querySelectorAll('#otp-inputs input');
-        inputs.forEach((input, index) => {
-            input.addEventListener('input', () => {
-                if (input.value.length === 1 && index < inputs.length - 1) {
-                    inputs[index + 1].focus();
-                }
-            });
-        });
-
-        // Простой таймер
-        let timeLeft = 40;
-        const timerElement = document.getElementById('timer');
-        const countdown = setInterval(() => {
-            if (timeLeft <= 0) clearInterval(countdown);
-            else {
-                timeLeft--;
-                timerElement.innerText = timeLeft;
-            }
-        }, 1000);
-    </script>
 </body>
 </html>
